@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pandas
+scikit-learn
+openai
+python-dotenv
+sqlalchemy
+psycopg2-binary
+passlib[bcrypt]
+python-jose
+stripe
+reportlab
+sendgrid
+python-multipart
+pymysql
+pyodbc
+websockets
