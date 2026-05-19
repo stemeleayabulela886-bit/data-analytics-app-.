@@ -1,46 +1,20 @@
-import React, { useState } from "react";
-import API from "../api/api";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useContext } from 'react';
+import { DataContext } from '../context/DataContext';
 
-function AutoChart({ file }) {
-  const [chart, setChart] = useState(null);
-  const [loading, setLoading] = useState(false);
+function AutoChart() {
+  const { dashboardData } = useContext(DataContext);
 
-  const handleSuggestChart = async () => {
-    if (!file) return;
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await API.post("/chart/", formData);
-      setChart(res.data.chart);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!dashboardData || dashboardData.length === 0) return <p>No data to display</p>;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg mb-6">
-      <h2 className="text-xl font-semibold mb-4">Auto Chart Generator</h2>
-      <button
-        onClick={handleSuggestChart}
-        disabled={loading}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-      >
-        {loading ? "Suggesting..." : "Suggest Chart"}
-      </button>
-      {chart && (
-        <div className="mt-4">
-          <h3 className="font-semibold">Suggested Chart:</h3>
-          <p>Type: {chart.type}</p>
-          {chart.x && <p>X: {chart.x}</p>}
-          {chart.y && <p>Y: {chart.y}</p>}
-        </div>
-      )}
-    </div>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={dashboardData}>
+        <XAxis dataKey="Date" /> {/* This matches your healed column name! */}
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="Revenue" fill="#2563eb" />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }
-
-export default AutoChart;

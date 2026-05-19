@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import API from "../api/api";
 
-function DatabaseConnect({ setData }) {
+function DatabaseConnect({ setTables, setActiveTableName }) {
   const [host, setHost] = useState("");
   const [port, setPort] = useState(5432);
   const [database, setDatabase] = useState("");
@@ -9,7 +9,7 @@ function DatabaseConnect({ setData }) {
   const [password, setPassword] = useState("");
   const [driver, setDriver] = useState("postgresql");
   const [status, setStatus] = useState("");
-  const [tables, setTables] = useState([]);
+  const [tables, setTablesList] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,23 +19,23 @@ function DatabaseConnect({ setData }) {
     try {
       const res = await API.post("/database/connect", {
         host,
-        port: parseInt(port),
+        port: Number(port),
         database,
         username,
         password,
         driver,
       });
-      setStatus(res.data.message);
-      // Fetch tables after successful connection
+      setStatus(res.data.message || "Connected successfully.");
+
       const tablesRes = await API.post("/database/tables", {
         host,
-        port: parseInt(port),
+        port: Number(port),
         database,
         username,
         password,
         driver,
       });
-      setTables(tablesRes.data.tables);
+      setTablesList(tablesRes.data.tables || []);
     } catch (error) {
       setStatus(error.response?.data?.detail || "Connection failed");
     } finally {
@@ -46,21 +46,33 @@ function DatabaseConnect({ setData }) {
   const handleImportTable = async () => {
     if (!selectedTable) return;
     setLoading(true);
+    setStatus("");
+
     try {
-      // For simplicity, assume we fetch data from the table
-      // In a real app, you'd need a backend endpoint to fetch table data
-      // For now, just set a placeholder
-      setData({ message: `Data from ${selectedTable} imported successfully` });
-      setStatus(`Imported data from ${selectedTable}`);
+      const res = await API.post("/database/table-data", {
+        host,
+        port: Number(port),
+        database,
+        username,
+        password,
+        driver,
+        table_name: selectedTable,
+      });
+
+      const rows = res.data.rows || [];
+      const tableName = `${driver}_${selectedTable}`;
+      setTables((prev) => ({ ...prev, [tableName]: rows }));
+      setActiveTableName(tableName);
+      setStatus(`Imported ${rows.length} rows from ${selectedTable}`);
     } catch (error) {
-      setStatus("Import failed");
+      setStatus(error.response?.data?.detail || "Import failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg mb-6">
+    <div className="bg-white p-6 rounded-2xl shadow-lg mb-6 border border-gray-100">
       <h2 className="text-xl font-semibold mb-4">Connect to Database</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -143,7 +155,7 @@ function DatabaseConnect({ setData }) {
       )}
 
       {status && (
-        <p className={`mt-3 text-sm ${status.includes("failed") ? "text-red-600" : "text-green-600"}`}>
+        <p className={`mt-3 text-sm ${status.toLowerCase().includes("failed") ? "text-red-600" : "text-green-600"}`}>
           {status}
         </p>
       )}

@@ -5,8 +5,14 @@ import ActionPanel from "./components/ActionPanel";
 import KPIView from "./components/KPIView";
 import ChartView from "./components/ChartView";
 import CleanReport from "./components/CleanReport";
-import DashboardBuilder from "./components/DashboardBuilder";
-import SaveAndPay from "./components/SaveAndPay";
+import LineChartView from "./components/LineChartView";
+import AreaChartView from "./components/AreaChartView";
+import PieChartView from "./components/PieChartView";
+import DonutChartView from "./components/DonutChartView";
+import TableView from "./components/TableView";
+import GaugeView from "./components/GaugeView";
+import MapView from "./components/MapView";
+import SlicerView from "./components/SlicerView";
 import { connectSocket, closeSocket } from "./services/socket";
 import { DataContext } from "./context/DataContext";
 
@@ -43,14 +49,22 @@ const PredictiveSlider = ({ onSimulate }) => {
 };
 
 const App = () => {
-  const { file, predictiveMultiplier, setPredictiveMultiplier } = useContext(DataContext);
+  const { activeTableData, predictiveMultiplier, setPredictiveMultiplier } = useContext(DataContext);
   const [draggedItem, setDraggedItem] = useState(null);
   const [notification, setNotification] = useState("");
   const [canvasComponents, setCanvasComponents] = useState([]);
 
   const visualComponents = [
     { id: 'kpi', label: 'KPI Cards', icon: <LayoutDashboard size={20} />, component: KPIView },
-    { id: 'chart', label: 'Chart Visualization', icon: <BarChart3 size={20} />, component: ChartView },
+    { id: 'chart', label: 'Auto Chart', icon: <BarChart3 size={20} />, component: ChartView },
+    { id: 'line', label: 'Line Chart', icon: <BarChart3 size={20} />, component: LineChartView },
+    { id: 'area', label: 'Area Chart', icon: <BarChart3 size={20} />, component: AreaChartView },
+    { id: 'pie', label: 'Pie Chart', icon: <LayoutDashboard size={20} />, component: PieChartView },
+    { id: 'donut', label: 'Donut Chart', icon: <LayoutDashboard size={20} />, component: DonutChartView },
+    { id: 'table', label: 'Data Table', icon: <Database size={20} />, component: TableView },
+    { id: 'gauge', label: 'Gauge Metric', icon: <Zap size={20} />, component: GaugeView },
+    { id: 'map', label: 'Map View', icon: <Database size={20} />, component: MapView },
+    { id: 'slice', label: 'Slicer', icon: <Zap size={20} />, component: SlicerView },
     { id: 'report', label: 'Cleaning Report', icon: <Database size={20} />, component: CleanReport },
   ];
 
@@ -77,16 +91,23 @@ const App = () => {
     e.preventDefault();
   };
 
+  const snapToGrid = (value) => {
+    const gridSize = 24;
+    return Math.max(16, Math.round(value / gridSize) * gridSize);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
-    if (draggedItem && file) {
+    if (draggedItem && activeTableData) {
       const rect = e.currentTarget.getBoundingClientRect();
+      const rawX = e.clientX - rect.left;
+      const rawY = e.clientY - rect.top;
       const newComponent = {
         id: Date.now(),
         type: draggedItem.id,
         component: draggedItem.component,
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: snapToGrid(rawX),
+        y: snapToGrid(rawY),
       };
       setCanvasComponents((prev) => [...prev, newComponent]);
     }
@@ -126,21 +147,26 @@ const App = () => {
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-72 bg-white border-r p-5 flex flex-col gap-6 overflow-y-auto">
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-4">Visualizations</h2>
-            <div className="space-y-3">
-              {visualComponents.map((item) => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={() => setDraggedItem(item)}
-                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl bg-white cursor-grab hover:border-indigo-400 transition"
-                >
-                  <span className="text-indigo-600">{item.icon}</span>
-                  <span className="font-medium text-sm">{item.label}</span>
-                </div>
-              ))}
+          <div className="rounded-3xl border border-gray-100 bg-indigo-50 p-5 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-indigo-600 text-white shadow-sm">
+              <LayoutDashboard size={28} />
             </div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-600">Visuals</h2>
+            <p className="text-[11px] text-indigo-500 mt-2">Choose and drag icons onto your dashboard.</p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            {visualComponents.map((item) => (
+              <button
+                key={item.id}
+                draggable
+                onDragStart={() => setDraggedItem(item)}
+                title={item.label}
+                className="h-14 w-14 rounded-3xl border border-gray-200 bg-white shadow-sm flex items-center justify-center text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition"
+              >
+                {item.icon}
+              </button>
+            ))}
           </div>
 
           <div>
@@ -153,10 +179,15 @@ const App = () => {
           <div className="flex-1 p-8 overflow-auto">
             <div
               className="w-full h-full min-h-[620px] border-2 border-dashed border-gray-300 rounded-3xl bg-white relative"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, rgba(203,213,225,0.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(203,213,225,0.35) 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
+              }}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              {canvasComponents.length === 0 && !file ? (
+              {canvasComponents.length === 0 && !activeTableData ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 px-8">
                   <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-200 text-center">
                     <LayoutDashboard size={48} className="mx-auto text-gray-200" />
@@ -189,7 +220,7 @@ const App = () => {
                       </div>
                     );
                   })}
-                  {file && canvasComponents.length === 0 && (
+                  {activeTableData && canvasComponents.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                       <p className="text-base">Upload successful! Drag visuals from the sidebar to construct your dashboard.</p>
                     </div>
