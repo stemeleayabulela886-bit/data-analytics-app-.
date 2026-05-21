@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import API from "../api/api";
 
 const AIChatbox = ({ onGenerateDashboard }) => {
   const [input, setInput] = useState("");
@@ -13,17 +14,27 @@ const AIChatbox = ({ onGenerateDashboard }) => {
     const newMessages = [...messages, { role: "user", text: input }];
     setMessages(newMessages);
     setInput("");
+    // Call backend AI generate endpoint
+    (async () => {
+      try {
+        const res = await API.post('/ai/generate', { prompt: input });
+        const data = res.data || {};
 
-    // Simulate AI parsing your text request to generate structured dashboard items
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        text: "Analyzing dataset... I have generated your requested data visualizations on the canvas!" 
-      }]);
-      
-      // Trigger dashboard layout changes based on keywords
-      onGenerateDashboard(input);
-    }, 1200);
+        setMessages(prev => [...prev, { role: "assistant", text: data.message || "I've prepared suggestions." }]);
+
+        // If backend returned visuals/kpis, send to the dashboard handler
+        if (data.visuals || data.kpis) {
+          onGenerateDashboard(data);
+        } else {
+          // Fallback to local heuristics
+          onGenerateDashboard(input);
+        }
+      } catch (err) {
+        console.error(err);
+        setMessages(prev => [...prev, { role: "assistant", text: "Sorry — couldn't reach the AI service." }]);
+        onGenerateDashboard(input);
+      }
+    })();
   };
 
   return (

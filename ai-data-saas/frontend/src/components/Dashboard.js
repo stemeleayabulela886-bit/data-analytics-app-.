@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import KPICard from "./KPICard";
 import AIChatbox from "./AIChatbox";
+import ChartView from "./ChartView";
+import LineChartView from "./LineChartView";
 
 function Dashboard() {
   const [visuals, setVisuals] = useState([]);
@@ -8,9 +10,19 @@ function Dashboard() {
     { id: 1, title: "Total Records Processed", value: "0", trend: "0", isPositive: true }
   ]);
 
-  // The state command center: parsing text inputs directly to layout items
-  const handleAIVisualGeneration = (prompt) => {
-    const text = (prompt || "").toLowerCase();
+  // The state command center: accepts either a text prompt or a backend payload
+  const handleAIVisualGeneration = (payloadOrPrompt) => {
+    // If backend returned an object with visuals/kpis, use it directly
+    if (payloadOrPrompt && typeof payloadOrPrompt === 'object' && (payloadOrPrompt.visuals || payloadOrPrompt.kpis)) {
+      const newVisuals = payloadOrPrompt.visuals || [];
+      const newKpis = payloadOrPrompt.kpis || [];
+      setVisuals((prev) => [...prev, ...newVisuals]);
+      setKpis((prev) => [...prev, ...newKpis]);
+      return;
+    }
+
+    // Otherwise treat it as a text prompt and fall back to local heuristics
+    const text = (payloadOrPrompt || "").toLowerCase();
     let newVisuals = [...visuals];
     let newKpis = [...kpis];
 
@@ -19,6 +31,13 @@ function Dashboard() {
         id: Date.now(),
         title: "AI Generated Regional Performance",
         type: "bar"
+      });
+    }
+    if (text.includes("line") || text.includes("trend")) {
+      newVisuals.push({
+        id: Date.now(),
+        title: "AI Generated Trend",
+        type: "line"
       });
     }
     if (text.includes("kpi") || text.includes("revenue") || text.includes("sales")) {
@@ -63,8 +82,23 @@ function Dashboard() {
               visuals.map((v) => (
                 <div key={v.id} className="col-span-12 lg:col-span-6 bg-white p-6 rounded-[2.5rem] shadow-xl border border-gray-50 h-[350px] flex flex-col">
                   <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">{v.title}</h3>
-                  <div className="flex-1 bg-gradient-to-br from-indigo-50/50 to-white border border-gray-100 rounded-2xl flex items-center justify-center italic text-xs text-indigo-400">
-                    Active dynamic rendering for {v.type} chart logic...
+                  <div className="flex-1">
+                    {v.type === 'bar' && (
+                      <div className="h-full">
+                        {/* reuse ChartView which renders a bar chart from DataContext or fallback */}
+                        <ChartView />
+                      </div>
+                    )}
+                    {v.type === 'line' && (
+                      <div className="h-full">
+                        <LineChartView />
+                      </div>
+                    )}
+                    {!['bar','line'].includes(v.type) && (
+                      <div className="h-full bg-gradient-to-br from-indigo-50/50 to-white border border-gray-100 rounded-2xl flex items-center justify-center italic text-xs text-indigo-400">
+                        Active dynamic rendering for {v.type} chart logic...
+                      </div>
+                    )}
                   </div>
                 </div>
               ))

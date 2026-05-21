@@ -2,7 +2,8 @@ import stripe
 from fastapi import FastAPI, Depends, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-from app.routes import upload, insights, chat, auth, predict, export, database, clean, kpi, action_chat, chart, dashboard, payment, analysis
+from app.routes import upload, insights, chat, auth, predict, export, database, clean, kpi, action_chat, chart, dashboard, payment, analysis, ai_generate
+from app.routes import ai_generate
 
 stripe.api_key = "your_stripe_secret_key"
 
@@ -44,12 +45,14 @@ app.include_router(kpi.router)
 app.include_router(action_chat.router)
 app.include_router(chart.router)
 app.include_router(dashboard.router)
+app.include_router(ai_generate.router)
 app.include_router(payment.router)
 app.include_router(analysis.router)
 
 @app.post("/token")
 async def login():
     # In a real app, verify username/password here
+app.include_router(ai_generate.router)
     return {"access_token": "your_generated_jwt_token", "token_type": "bearer"}
 
 @app.post("/create-checkout-session")
