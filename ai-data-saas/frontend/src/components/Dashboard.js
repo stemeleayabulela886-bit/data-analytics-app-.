@@ -3,6 +3,9 @@ import KPICard from "./KPICard";
 import AIChatbox from "./AIChatbox";
 import ChartView from "./ChartView";
 import LineChartView from "./LineChartView";
+import DonutChartView from "./DonutChartView";
+import GaugeView from "./GaugeView";
+import MapView from "./MapView";
 
 function Dashboard() {
   const [visuals, setVisuals] = useState([]);
@@ -94,7 +97,22 @@ function Dashboard() {
                         <LineChartView />
                       </div>
                     )}
-                    {!['bar','line'].includes(v.type) && (
+                    {v.type === 'donut' && (
+                      <div className="h-full">
+                        <DonutChartView />
+                      </div>
+                    )}
+                    {v.type === 'gauge' && (
+                      <div className="h-full">
+                        <GaugeView />
+                      </div>
+                    )}
+                    {v.type === 'map' && (
+                      <div className="h-full">
+                        <MapView />
+                      </div>
+                    )}
+                    {!['bar','line','donut','gauge','map'].includes(v.type) && (
                       <div className="h-full bg-gradient-to-br from-indigo-50/50 to-white border border-gray-100 rounded-2xl flex items-center justify-center italic text-xs text-indigo-400">
                         Active dynamic rendering for {v.type} chart logic...
                       </div>
