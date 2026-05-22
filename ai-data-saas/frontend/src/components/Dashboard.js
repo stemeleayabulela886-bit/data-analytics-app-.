@@ -58,18 +58,39 @@ function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F8FAFC]">
+    <div className="flex h-screen bg-[#F8FAFC]">
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-[1440px] mx-auto">
-            {/* AI Automated KPI Cards */}
+            <div className="flex flex-col gap-6 mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-indigo-500 font-bold">Dashboard workspace</p>
+                  <h2 className="text-3xl font-black text-slate-900">AI insights canvas</h2>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50">Overview</button>
+                  <button className="px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700">Analytics</button>
+                  <button className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50">Dataset</button>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <p className="text-sm text-slate-500">Track real-time dashboard creation and AI insights with quick actions.</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50">Refresh</button>
+                  <button className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50">Export</button>
+                  <button className="px-4 py-2 rounded-full bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700">Add Widget</button>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               {kpis.map(kpi => (
                 <KPICard key={kpi.id} title={kpi.title} value={kpi.value} trend={kpi.trend} isPositive={kpi.isPositive} />
               ))}
             </div>
 
-            {/* Core Visualizations Panel Grid */}
             <div className="grid grid-cols-12 gap-6">
               {visuals.length === 0 ? (
                 <div className="col-span-12 h-96 border-2 border-dashed border-gray-200 rounded-[2.5rem] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md">
@@ -122,10 +143,8 @@ function Dashboard() {
         </main>
       </div>
 
-      <div className="bg-gray-50 border-t border-gray-100 p-6">
-        <div className="max-w-[1440px] mx-auto">
-          <AIChatbox onGenerateDashboard={handleAIVisualGeneration} />
-        </div>
+      <div className="w-96 p-6 flex items-center justify-center bg-gray-50 border-l border-gray-100">
+        <AIChatbox onGenerateDashboard={handleAIVisualGeneration} />
       </div>
     </div>
   );
